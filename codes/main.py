@@ -12,7 +12,7 @@ from train import train
 def base_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--mode", type=str, choices=['train', 'test'], default='train')
+        "--mode", type=str, choices=["train", "test"], default="train")
     parser.add_argument(
         "--gpu", type=str)
     parser.add_argument(

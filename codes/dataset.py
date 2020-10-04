@@ -24,7 +24,7 @@ class LyftLDM(LightningDataModule):
     def __init__(self, args, data_root):
         super().__init__()
         self.args = args
-        if args.mode == 'train':
+        if args.mode == "train":
             self.cfg = utils.get_train_cfg(args)
         else:
             self.cfg = utils.get_test_cfg(args)
@@ -56,7 +56,7 @@ class LyftLDM(LightningDataModule):
             self.cfg, zarr_dataset, self.rast, agents_mask=test_mask
         )
         return DataLoader(
-            agent_dataset,
+            self.agent_dataset,
             shuffle=False,
             batch_size=self.args.batch_size,
             num_workers=self.args.num_workers,
@@ -83,4 +83,4 @@ class LyftLDM(LightningDataModule):
             im, target_positions_pixels, TARGET_POINTS_COLOR, 1,  data["target_yaws"]
         )
         plt.imshow(im[::-1])
-        plt.savefig('filename.png')
+        plt.savefig("filename.png")

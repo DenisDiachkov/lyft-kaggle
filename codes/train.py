@@ -23,13 +23,15 @@ def train_args(parent_parser):
 
     # Model options
     parser.add_argument(
-        "--history_num_frames", '-hnf', type=int, default=10)
+        "--history_num_frames", "-hnf", type=int, default=10)
     parser.add_argument(
-        "--future_num_frames", '-fnf', type=int, default=50)
+        "--future_num_frames", "-fnf", type=int, default=50)
 
     # Train options 
     parser.add_argument(
-        "--batch_size", '-bs', type=int, default=4)
+        "--batch_size", "-bs", type=int, default=4)
+    parser.add_argument(
+        "--distributed_backend", "-db", type=str, default="dp")
     parser.add_argument(
         "--epochs", type=int, default=4)
     parser.add_argument(
@@ -69,6 +71,10 @@ def train(args, parser):
         else args.iterations_per_epoch,
         row_log_interval=1,
         log_save_interval=1,
+<<<<<<< HEAD
         resume_from_checkpoint=args.pretrained_path if args.resume else None
+=======
+        distributed_backend=args.distributed_backend,
+>>>>>>> 89401b7bfb1f107d3af1b095db227db396047cc3
     )
     trainer.fit(get_module(args), datamodule=LyftLDM(args, os.environ["L5KIT_DATA_FOLDER"]))
