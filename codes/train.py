@@ -38,7 +38,7 @@ def train_args(parent_parser):
         "--iterations_per_epoch", "-ipe", type=int)
     parser.add_argument(
         "--experiment_name", "-exn", type=str,
-        default=datetime.now().strftime("%d_%m_%Y_%H_%M_%S"))
+        default=datetime.now().strftime("%d-%m-%Y_%H%M%S"))
     parser.add_argument(
         "--resume", action="store_true")
     parser.add_argument(
