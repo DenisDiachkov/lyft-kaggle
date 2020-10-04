@@ -71,10 +71,7 @@ def train(args, parser):
         else args.iterations_per_epoch,
         row_log_interval=1,
         log_save_interval=1,
-<<<<<<< HEAD
-        resume_from_checkpoint=args.pretrained_path if args.resume else None
-=======
+        resume_from_checkpoint=args.pretrained_path if args.resume else None,
         distributed_backend=args.distributed_backend,
->>>>>>> 89401b7bfb1f107d3af1b095db227db396047cc3
     )
     trainer.fit(get_module(args), datamodule=LyftLDM(args, os.environ["L5KIT_DATA_FOLDER"]))
