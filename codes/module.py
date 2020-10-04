@@ -18,26 +18,14 @@ class LyftModule(LightningModule):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        target_availabilities = batch["target_availabilities"].unsqueeze(-1)
-        targets = batch["target_positions"]
-        data = batch["image"]
-
-        outputs = self(data).reshape(targets.shape)
-        loss = self.criterion(outputs, targets)
-        loss = (loss * target_availabilities).mean()
+        loss = self.compute_loss(batch)
 
         result = pl.TrainResult(loss)
         result.log("train_loss", loss, on_epoch=True)
         return result
 
     def validation_step(self, batch, batch_idx):
-        target_availabilities = batch["target_availabilities"].unsqueeze(-1)
-        targets = batch["target_positions"]
-        data = batch["image"]
-
-        outputs = self(data).reshape(targets.shape)
-        loss = self.criterion(outputs, targets)
-        loss = (loss * target_availabilities).mean()
+        loss = self.compute_loss(batch)
         
         result = pl.EvalResult(checkpoint_on=loss)
         result.log("val_loss", loss)
@@ -55,6 +43,7 @@ class LyftModule(LightningModule):
         return self.optimizer, self.scheduler
 
     def test_step(self, batch, batch_idx):
+    
         target_availabilities = batch["target_availabilities"].unsqueeze(-1)
         targets = batch["target_positions"]
         data = batch["image"]
@@ -77,3 +66,8 @@ class LyftModule(LightningModule):
                 [output["future_coords_offsets_pd"] for output in outputs])
         )
         return {}
+    
+    def compute_loss(self, batch):
+        loss = self.criterion(outputs, targets)
+        loss = (loss * target_availabilities).mean()
+        return loss

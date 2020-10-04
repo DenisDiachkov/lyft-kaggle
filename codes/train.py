@@ -38,7 +38,7 @@ def train_args(parent_parser):
         "--iterations_per_epoch", "-ipe", type=int)
     parser.add_argument(
         "--experiment_name", "-exn", type=str,
-        default=datetime.now().strftime("%d_%m_%Y_%H_%M_%S"))
+        default=datetime.now().strftime("%d-%m-%Y_%H%M%S"))
     parser.add_argument(
         "--resume", action="store_true")
     parser.add_argument(
@@ -74,4 +74,6 @@ def train(args, parser):
         resume_from_checkpoint=args.pretrained_path if args.resume else None,
         distributed_backend=args.distributed_backend,
     )
-    trainer.fit(get_module(args), datamodule=LyftLDM(args, os.environ["L5KIT_DATA_FOLDER"]))
+    trainer.fit(
+        get_module(args),
+        datamodule=LyftLDM(args, os.environ["L5KIT_DATA_FOLDER"]))
