@@ -56,7 +56,7 @@ class LyftLDM(LightningDataModule):
             self.cfg, zarr_dataset, self.rast, agents_mask=test_mask
         )
         return DataLoader(
-            agent_dataset,
+            self.agent_dataset,
             shuffle=False,
             batch_size=self.args.batch_size,
             num_workers=self.args.num_workers,
