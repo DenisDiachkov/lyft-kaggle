@@ -31,6 +31,8 @@ def train_args(parent_parser):
     parser.add_argument(
         "--batch_size", '-bs', type=int, default=4)
     parser.add_argument(
+        "--distributed_backend", "-db", type=str, default="dp")
+    parser.add_argument(
         "--epochs", type=int, default=4)
     parser.add_argument(
         "--iterations_per_epoch", "-ipe", type=int)
@@ -66,5 +68,6 @@ def train(args, parser):
         else args.iterations_per_epoch,
         row_log_interval=1,
         log_save_interval=1,
+        distributed_backend=args.distributed_backend,
     )
     trainer.fit(get_module(args), datamodule=LyftLDM(args, os.environ["L5KIT_DATA_FOLDER"]))
