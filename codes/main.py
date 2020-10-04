@@ -1,7 +1,7 @@
 import argparse
-import multiprocessing as mp
 import os
 import warnings
+from multiprocessing import cpu_count
 from datetime import datetime
 from test import test
 
@@ -19,7 +19,7 @@ def base_args():
         "--cpu", action="store_true")
     parser.add_argument(
         "--num_workers", "--jobs", "-j",
-        type=int, choices=range(mp.cpu_count()+1), default=mp.cpu_count())
+        type=int, choices=range(cpu_count()+1), default=cpu_count())
     parser.add_argument("--Wall", action="store_true")
     args, _ = parser.parse_known_args()
     utils.set_device(args)
@@ -28,7 +28,7 @@ def base_args():
 
 def main():
     os.environ["L5KIT_DATA_FOLDER"] = \
-        "input/lyft-motion-prediction-autonomous-vehicles"
+        os.path.realpath("../input/lyft-motion-prediction-autonomous-vehicles")
     args, parser = base_args()
     if args.Wall:
         warnings.simplefilter("error")

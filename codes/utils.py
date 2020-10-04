@@ -1,7 +1,9 @@
+import os
 
 
 def set_device(args):
-    if args.cpu is not None:
+    print(args.cpu, args.gpu)
+    if args.cpu:
         if args.gpu is not None:
             raise ArgumentError("Can't use CPU and GPU at the same time")
     elif args.gpu is None:
