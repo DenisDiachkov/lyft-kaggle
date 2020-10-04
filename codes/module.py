@@ -19,10 +19,11 @@ class LyftModule(LightningModule):
         target_availabilities = batch["target_availabilities"].unsqueeze(-1)
         targets = batch["target_positions"]
         data = batch["image"]
+
         outputs = self(data).reshape(targets.shape)
         loss = self.criterion(outputs, targets)
-        loss = loss * target_availabilities
-        loss = loss.mean()
+        loss = (loss * target_availabilities).mean()
+
         result = pl.TrainResult(loss)
         result.log("train_loss", loss, on_epoch=True)
         return result
@@ -31,10 +32,11 @@ class LyftModule(LightningModule):
         target_availabilities = batch["target_availabilities"].unsqueeze(-1)
         targets = batch["target_positions"]
         data = batch["image"]
+
         outputs = self(data).reshape(targets.shape)
         loss = self.criterion(outputs, targets)
-        loss = loss * target_availabilities
-        loss = loss.mean()
+        loss = (loss * target_availabilities).mean()
+        
         result = pl.EvalResult(checkpoint_on=loss)
         result.log("val_loss", loss)
         return result
