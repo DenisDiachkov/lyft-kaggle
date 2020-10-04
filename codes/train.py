@@ -37,7 +37,10 @@ def train_args(parent_parser):
     parser.add_argument(
         "--experiment_name", "-exn", type=str,
         default=datetime.now().strftime("%d_%m_%Y_%H_%M_%S"))
-    
+    parser.add_argument(
+        "--resume", action="store_true")
+    parser.add_argument(
+        "--pretrained_path", "-pp", type=str)
     args = parser.parse_args()
     return args
 
@@ -66,5 +69,6 @@ def train(args, parser):
         else args.iterations_per_epoch,
         row_log_interval=1,
         log_save_interval=1,
+        resume_from_checkpoint=args.pretrained_path if args.resume else None
     )
     trainer.fit(get_module(args), datamodule=LyftLDM(args, os.environ["L5KIT_DATA_FOLDER"]))
