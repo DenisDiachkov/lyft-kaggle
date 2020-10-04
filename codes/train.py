@@ -38,8 +38,8 @@ def train_args(parent_parser):
         "--experiment_name", "-exn", type=str,
         default=datetime.now().strftime("%d_%m_%Y_%H_%M_%S"))
     
-    args, _ = parser.parse_known_args()
-    return args, parser
+    args = parser.parse_args()
+    return args
 
 
 def get_module(args):
@@ -53,7 +53,7 @@ def get_module(args):
 
 
 def train(args, parser):
-    args, parser = train_args(parser)
+    args = train_args(parser)
     tb_logger = tb(".", "experiments", version=args.experiment_name)
     trainer = Trainer(
         gpus=args.gpu,
