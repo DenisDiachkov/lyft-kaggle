@@ -23,13 +23,13 @@ def train_args(parent_parser):
 
     # Model options
     parser.add_argument(
-        "--history_num_frames", '-hnf', type=int, default=10)
+        "--history_num_frames", "-hnf", type=int, default=10)
     parser.add_argument(
-        "--future_num_frames", '-fnf', type=int, default=50)
+        "--future_num_frames", "-fnf", type=int, default=50)
 
     # Train options 
     parser.add_argument(
-        "--batch_size", '-bs', type=int, default=4)
+        "--batch_size", "-bs", type=int, default=4)
     parser.add_argument(
         "--distributed_backend", "-db", type=str, default="dp")
     parser.add_argument(

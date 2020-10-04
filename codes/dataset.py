@@ -24,7 +24,7 @@ class LyftLDM(LightningDataModule):
     def __init__(self, args, data_root):
         super().__init__()
         self.args = args
-        if args.mode == 'train':
+        if args.mode == "train":
             self.cfg = utils.get_train_cfg(args)
         else:
             self.cfg = utils.get_test_cfg(args)
@@ -83,4 +83,4 @@ class LyftLDM(LightningDataModule):
             im, target_positions_pixels, TARGET_POINTS_COLOR, 1,  data["target_yaws"]
         )
         plt.imshow(im[::-1])
-        plt.savefig('filename.png')
+        plt.savefig("filename.png")
