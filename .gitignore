@@ -135,6 +135,6 @@ lightning_logs/
 
 
 # Folders
-experiments/* 
-input/* 
+experiments/
+input/
 !.gitkeep
