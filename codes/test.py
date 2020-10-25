@@ -42,8 +42,6 @@ def test(args, parser):
         distributed_backend=args.distributed_backend,
         max_steps=20
     )
-<<<<<<< HEAD
-    trainer.test(get_module(args), datamodule=LyftLDM(args, os.environ["L5KIT_DATA_FOLDER"]))
-=======
-    trainer.test(get_module(args), datamodule=LyftLDM(args, os.environ["L5KIT_DATA_FOLDER"]))
->>>>>>> fix
+    trainer.test(
+        get_module(args),
+        datamodule=LyftLDM(args, os.environ["L5KIT_DATA_FOLDER"]))

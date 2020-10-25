@@ -66,32 +66,11 @@ class LyftModule(LightningModule):
             self.scheduler = [self.scheduler]
         return self.optimizer, self.scheduler
 
-    def test_step(self, batch, batch_idx):
-    
+    def compute_loss(self, batch):
         target_availabilities = batch["target_availabilities"].unsqueeze(-1)
         targets = batch["target_positions"]
         data = batch["image"]
-
         outputs = self(data).reshape(targets.shape)
-
-        return {
-            "future_coords_offsets_pd": outputs.cpu().numpy(),
-            "timestamps": batch["timestamp"].numpy(),
-            "agent_ids": batch["track_id"].numpy()
-        }
-
-    def test_epoch_end(self, outputs):
-        write_pred_csv('submission.csv',
-            timestamps=np.concatenate(
-                [output["timestamps"] for output in outputs]),
-            track_ids=np.concatenate(
-                [output["agent_ids"] for output in outputs]),
-            coords=np.concatenate(
-                [output["future_coords_offsets_pd"] for output in outputs])
-        )
-        return {}
-    
-    def compute_loss(self, batch):
         loss = self.criterion(outputs, targets)
         loss = (loss * target_availabilities).mean()
         return loss
