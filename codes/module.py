@@ -49,8 +49,8 @@ class LyftModule(LightningModule):
 
         return {
             "future_coords_offsets_pd": outputs.cpu().numpy(),
-            "timestamps": batch["timestamp"].numpy(),
-            "agent_ids": batch["track_id"].numpy()
+            "timestamps": batch["timestamp"].cpu().numpy(),
+            "agent_ids": batch["track_id"].cpu().numpy()
         }
 
     def test_epoch_end(self, outputs):

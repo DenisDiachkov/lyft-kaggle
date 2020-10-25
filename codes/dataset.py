@@ -31,6 +31,7 @@ class LyftLDM(LightningDataModule):
         self.data_root = data_root
         self.dm = LocalDataManager(data_root)
         self.rast = build_rasterizer(self.cfg, self.dm)
+        # self.plt_show_agent_map(0)
         # self.ego_dataset = EgoDataset(self.cfg, self.zarr_dataset, self.rast)
 
     def chunked_dataset(self, relative_path):
@@ -74,6 +75,7 @@ class LyftLDM(LightningDataModule):
         )
 
     def plt_show_agent_map(self, idx):
+        zarr_dataset = self.chunked_dataset("scenes/train.zarr")
         agent_dataset = AgentDataset(self.cfg, zarr_dataset, self.rast)
         data = agent_dataset[idx]
         im = data["image"].transpose(1, 2, 0)
