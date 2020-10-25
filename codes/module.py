@@ -3,6 +3,7 @@ from l5kit.evaluation import write_pred_csv
 import torch
 import pytorch_lightning as pl
 import numpy as np
+from l5kit.evaluation.metrics import neg_multi_log_likelihood
 
 
 class LyftModule(LightningModule):
@@ -18,17 +19,25 @@ class LyftModule(LightningModule):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        loss = self.compute_loss(batch)
+        outputs = self(batch["image"])
+
+        loss = self.compute_loss(batch, outputs)
+        eval_metric = self.compute_metric(batch, outputs)
 
         result = pl.TrainResult(loss)
-        result.log("train_loss", loss, on_epoch=True)
+        result.log("train_loss", loss, on_epoch=True, prog_bar=True)
+        result.log("train_eval_metric", eval_metric, prog_bar=True)
         return result
 
     def validation_step(self, batch, batch_idx):
-        loss = self.compute_loss(batch)
+        outputs = self(batch["image"])
+
+        loss = self.compute_loss(batch, outputs)
+        eval_metric = self.compute_metric(batch, outputs)
         
         result = pl.EvalResult(checkpoint_on=loss)
-        result.log("val_loss", loss)
+        result.log("val_loss", loss, prog_bar=True)
+        result.log("val_eval_metric", eval_metric, prog_bar=True)
         return result
 
     def test_step(self, batch, batch_idx):
@@ -66,11 +75,24 @@ class LyftModule(LightningModule):
             self.scheduler = [self.scheduler]
         return self.optimizer, self.scheduler
 
-    def compute_loss(self, batch):
+    def compute_loss(self, batch, outputs):
         target_availabilities = batch["target_availabilities"].unsqueeze(-1)
         targets = batch["target_positions"]
         data = batch["image"]
-        outputs = self(data).reshape(targets.shape)
+        outputs = outputs.reshape(targets.shape)
         loss = self.criterion(outputs, targets)
         loss = (loss * target_availabilities).mean()
         return loss
+
+    def compute_metric(self, batch, outputs):
+        target_availabilities = batch["target_availabilities"].unsqueeze(-1)
+        targets = batch["target_positions"]
+        data = batch["image"]
+        outputs = outputs.reshape(targets.shape)
+        eval_metric = 0
+        for target, output, avail in zip(targets, outputs, target_availabilities):
+            eval_metric += neg_multi_log_likelihood(
+                target.numpy(), output.unsqueeze(0).detach().numpy(), 
+                np.ones(1), avail.squeeze(1).numpy()
+            )
+        return torch.tensor(eval_metric)

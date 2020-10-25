@@ -70,9 +70,9 @@ def train(args, parser):
         logger=tb_logger,
         num_sanity_val_steps=1,
         deterministic=True,
-        limit_train_batches=1.0 if args.iterations_per_epoch is None
+        limit_train_batches=1.0 if args.train_iterations_per_epoch is None
         else args.train_iterations_per_epoch,
-        limit_val_batches=1.0 if args.iterations_per_epoch is None
+        limit_val_batches=1.0 if args.valid_iterations_per_epoch is None
         else args.valid_iterations_per_epoch,
         row_log_interval=1,
         log_save_interval=1,
