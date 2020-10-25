@@ -92,7 +92,9 @@ class LyftModule(LightningModule):
         eval_metric = 0
         for target, output, avail in zip(targets, outputs, target_availabilities):
             eval_metric += neg_multi_log_likelihood(
-                target.numpy(), output.unsqueeze(0).detach().numpy(), 
-                np.ones(1), avail.squeeze(1).numpy()
+                target.cpu().numpy(),
+                output.unsqueeze(0).detach().cpu().numpy(), 
+                np.ones(1),
+                avail.squeeze(1).cpu().numpy()
             )
         return torch.tensor(eval_metric)
