@@ -40,40 +40,42 @@ class LyftLDM(LightningDataModule):
         return zarr_dataset
 
     def val_dataloader(self):
-        zarr_dataset = self.chunked_dataset("scenes/validate.zarr")
-        agent_dataset = AgentDataset(self.cfg, zarr_dataset, self.rast)
-        return DataLoader(
-            agent_dataset,
-            shuffle=False,
-            batch_size=self.args.batch_size,
-            num_workers=self.args.num_workers,
+        return self.get_dataloader(
+            "scenes/validate.zarr",
+            self.args.shuffle
         )
 
     def test_dataloader(self):
-        zarr_dataset = self.chunked_dataset("scenes/test.zarr")
-        test_mask = np.load(f"{self.data_root}/scenes/mask.npz")["arr_0"]
-        self.agent_dataset = AgentDataset(
-            self.cfg, zarr_dataset, self.rast, agents_mask=test_mask
-        )
-        return DataLoader(
-            self.agent_dataset,
-            shuffle=False,
-            batch_size=self.args.batch_size,
-            num_workers=self.args.num_workers,
+        return self.get_dataloader(
+            "scenes/test.zarr",
+            False,
+            np.load(f"{self.data_root}/scenes/mask.npz")["arr_0"]
         )
 
     def train_dataloader(self):
-        zarr_dataset = self.chunked_dataset("scenes/train.zarr")
-        self.agent_dataset = AgentDataset(self.cfg, zarr_dataset, self.rast)
+        return self.get_dataloader(
+            "scenes/train.zarr",
+            self.args.shuffle
+        )
+
+    def get_dataloader(self, zarr_dataset_path, shuffle, agent_mask=None):
+        zarr_dataset = self.chunked_dataset(zarr_dataset_path)
+        if agent_mask is None:
+            agent_dataset = AgentDataset(self.cfg, zarr_dataset, self.rast)
+        else:
+            agent_dataset = AgentDataset(
+                self.cfg, zarr_dataset, self.rast, agents_mask=agent_mask
+            )
         return DataLoader(
-            self.agent_dataset,
-            shuffle=self.args.shuffle,
+            agent_dataset,
+            shuffle=shuffle,
             batch_size=self.args.batch_size,
             num_workers=self.args.num_workers,
         )
 
     def plt_show_agent_map(self, idx):
-        data = self.agent_dataset[idx]
+        agent_dataset = AgentDataset(self.cfg, zarr_dataset, self.rast)
+        data = agent_dataset[idx]
         im = data["image"].transpose(1, 2, 0)
         im = self.rast.to_rgb(im)
         target_positions_pixels = transform_points(
