@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.optim.lr_scheduler as sched
 from pytorch_lightning import Trainer
+from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger as tb
 
 from module import LyftModule
@@ -35,7 +36,9 @@ def train_args(parent_parser):
     parser.add_argument(
         "--epochs", type=int, default=4)
     parser.add_argument(
-        "--iterations_per_epoch", "-ipe", type=int)
+        "--train_iterations_per_epoch", "-tipe", type=int)
+    parser.add_argument(
+        "--valid_iterations_per_epoch", "-vipe", type=int)
     parser.add_argument(
         "--experiment_name", "-exn", type=str,
         default=datetime.now().strftime("%d-%m-%Y_%H%M%S"))
@@ -60,15 +63,17 @@ def get_module(args):
 def train(args, parser):
     args = train_args(parser)
     tb_logger = tb(".", "experiments", version=args.experiment_name)
+    checkpoint_callback = ModelCheckpoint(monitor="val_loss")
     trainer = Trainer(
         gpus=args.gpu,
+        checkpoint_callback=checkpoint_callback,
         logger=tb_logger,
         num_sanity_val_steps=1,
         deterministic=True,
         limit_train_batches=1.0 if args.iterations_per_epoch is None
-        else args.iterations_per_epoch,
+        else args.train_iterations_per_epoch,
         limit_val_batches=1.0 if args.iterations_per_epoch is None
-        else args.iterations_per_epoch,
+        else args.valid_iterations_per_epoch,
         row_log_interval=1,
         log_save_interval=1,
         resume_from_checkpoint=args.pretrained_path if args.resume else None,
