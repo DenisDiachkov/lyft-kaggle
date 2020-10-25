@@ -1,8 +1,8 @@
-import numpy as np
-import pytorch_lightning as pl
-import torch
-from l5kit.evaluation import write_pred_csv
 from pytorch_lightning import LightningModule
+from l5kit.evaluation import write_pred_csv
+import torch
+import pytorch_lightning as pl
+import numpy as np
 
 
 class LyftModule(LightningModule):
@@ -30,6 +30,30 @@ class LyftModule(LightningModule):
         result = pl.EvalResult(checkpoint_on=loss)
         result.log("val_loss", loss)
         return result
+
+    def test_step(self, batch, batch_idx):
+        target_availabilities = batch["target_availabilities"].unsqueeze(-1)
+        targets = batch["target_positions"]
+        data = batch["image"]
+
+        outputs = self(data).reshape(targets.shape)
+
+        return {
+            "future_coords_offsets_pd": outputs.cpu().numpy(),
+            "timestamps": batch["timestamp"].numpy(),
+            "agent_ids": batch["track_id"].numpy()
+        }
+
+    def test_epoch_end(self, outputs):
+        write_pred_csv('submission.csv',
+            timestamps=np.concatenate(
+                [output["timestamps"] for output in outputs]),
+            track_ids=np.concatenate(
+                [output["agent_ids"] for output in outputs]),
+            coords=np.concatenate(
+                [output["future_coords_offsets_pd"] for output in outputs])
+        )
+        return {}
 
     def configure_optimizers(self):
         if self.optimizer is None:
