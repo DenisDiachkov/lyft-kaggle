@@ -41,7 +41,6 @@ class LyftModule(LightningModule):
         return result
 
     def test_step(self, batch, batch_idx):
-        target_availabilities = batch["target_availabilities"].unsqueeze(-1)
         targets = batch["target_positions"]
         data = batch["image"]
 
@@ -65,20 +64,15 @@ class LyftModule(LightningModule):
         return {}
 
     def configure_optimizers(self):
-        if self.optimizer is None:
-            return None
-        if not isinstance(self.optimizer, list):
-            self.optimizer = [self.optimizer]
-        if self.scheduler is None:
-            return self.optimizer
-        if not isinstance(self.scheduler, list):
-            self.scheduler = [self.scheduler]
-        return self.optimizer, self.scheduler
+        return {
+            "optimizer": self.optimizer,
+            "scheduler": self.scheduler,
+            "monitor": "val_eval_metric"
+        }
 
     def compute_loss(self, batch, outputs):
         target_availabilities = batch["target_availabilities"].unsqueeze(-1)
         targets = batch["target_positions"]
-        data = batch["image"]
         outputs = outputs.reshape(targets.shape)
         loss = self.criterion(outputs, targets)
         loss = (loss * target_availabilities).mean()
@@ -87,7 +81,6 @@ class LyftModule(LightningModule):
     def compute_metric(self, batch, outputs):
         target_availabilities = batch["target_availabilities"].unsqueeze(-1)
         targets = batch["target_positions"]
-        data = batch["image"]
         outputs = outputs.reshape(targets.shape)
         eval_metric = 0
         for target, output, avail in zip(targets, outputs, target_availabilities):

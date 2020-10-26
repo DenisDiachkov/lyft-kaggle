@@ -52,10 +52,8 @@ def train_args(parent_parser):
 
 def get_module(args):
     model = LyftNet(args.history_num_frames, args.future_num_frames)
-    optimizer = optim.Adam(
-        model.parameters(), lr=1e-4)
-    scheduler = sched.CosineAnnealingWarmRestarts(
-        optimizer, 150)
+    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+    scheduler = sched.ReduceLROnPlateau(optimizer, "min", 0.3, 5, min_lr=1e-8)
     criterion = nn.MSELoss()
     return LyftModule(model, optimizer, scheduler, criterion)
 
