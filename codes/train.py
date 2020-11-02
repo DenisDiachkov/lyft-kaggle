@@ -12,6 +12,7 @@ from pytorch_lightning.loggers import TensorBoardLogger as tb
 from module import LyftModule
 from net import LyftNet
 from dataset import LyftLDM
+from utils import pytorch_neg_multi_log_likelihood_batch
 
 
 def train_args(parent_parser):
@@ -54,7 +55,7 @@ def get_module(args):
     model = LyftNet(args.history_num_frames, args.future_num_frames)
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
     scheduler = sched.ReduceLROnPlateau(optimizer, "min", 0.3, 5, min_lr=1e-8)
-    criterion = nn.MSELoss()
+    criterion = pytorch_neg_multi_log_likelihood_batch
     return LyftModule(model, optimizer, scheduler, criterion)
 
 

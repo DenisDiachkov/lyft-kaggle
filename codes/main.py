@@ -27,8 +27,8 @@ def base_args():
 
 
 def main():
-    os.environ["L5KIT_DATA_FOLDER"] = \
-        os.path.realpath("../input/lyft-motion-prediction-autonomous-vehicles")
+    os.environ["L5KIT_DATA_FOLDER"] = os.path.realpath(
+        "../input/lyft-motion-prediction-autonomous-vehicles")
     args, parser = base_args()
     if args.Wall:
         warnings.simplefilter("error")

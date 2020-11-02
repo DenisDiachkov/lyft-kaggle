@@ -10,24 +10,58 @@ class LyftNet(LightningModule):
         history_num_frames, 
         future_num_frames,
         pretrained=True,
+        num_modes=3,
         **kwargs
     ):
         super().__init__()
         num_history_channels = (history_num_frames+1) * 2
         num_in_channels = 3 + num_history_channels
         num_targets = 2 * future_num_frames
+        self.future_len = future_num_frames
 
-        resnet = resnet34(pretrained=pretrained)
-        resnet.conv1 = nn.Conv2d(
+        self.backbone = resnet34(pretrained=pretrained)
+        #for name, param in resnet.named_parameters():
+        #    if param.requires_grad:
+        #        print(name + " " * (30 - len(name)) + str(param.shape))
+        self.backbone.conv1 = nn.Conv2d(
             num_in_channels,
-            resnet.conv1.out_channels,
-            kernel_size=resnet.conv1.kernel_size,
-            stride=resnet.conv1.stride,
-            padding=resnet.conv1.padding,
+            self.backbone.conv1.out_channels,
+            kernel_size=self.backbone.conv1.kernel_size,
+            stride=self.backbone.conv1.stride,
+            padding=self.backbone.conv1.padding,
             bias=False,
         )
-        resnet.fc = nn.Linear(in_features=512, out_features=num_targets)
-        self.resnet = resnet
+        backbone_out_features = 512
+        self.head = nn.Sequential(
+            # nn.Dropout(0.2),
+            nn.Linear(in_features=backbone_out_features, out_features=4096),
+        )
+        self.num_preds = num_targets * num_modes
+        self.num_modes = num_modes
+        self.logit = nn.Linear(4096, out_features=self.num_preds + num_modes)
 
-    def forward(self, data):
-        return self.resnet(data)
+    def forward(self, x):
+        x = self.backbone.conv1(x)
+        x = self.backbone.bn1(x)
+        x = self.backbone.relu(x)
+        x = self.backbone.maxpool(x)
+
+        x = self.backbone.layer1(x)
+        x = self.backbone.layer2(x)
+        x = self.backbone.layer3(x)
+        x = self.backbone.layer4(x)
+
+        x = self.backbone.avgpool(x)
+        x = torch.flatten(x, 1)
+
+        x = self.head(x)
+        x = self.logit(x)
+
+        # pred (batch_size)x(modes)x(time)x(2D coords)
+        # confidences (batch_size)x(modes)
+        bs, _ = x.shape
+        pred, confidences = torch.split(x, self.num_preds, dim=1)
+        pred = pred.view(bs, self.num_modes, self.future_len, 2)
+        assert confidences.shape == (bs, self.num_modes)
+        confidences = torch.softmax(confidences, dim=1)
+        return pred, confidences
