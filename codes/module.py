@@ -41,15 +41,12 @@ class LyftModule(LightningModule):
         return result
 
     def test_step(self, batch, batch_idx):
-        targets = batch["target_positions"]
-        data = batch["image"]
-
-        outputs = self(data).reshape(targets.shape)
-
+        outputs = self(batch["image"])
         return {
-            "future_coords_offsets_pd": outputs.cpu().numpy(),
+            "future_coords_offsets_pd": outputs[0].cpu().numpy(),
             "timestamps": batch["timestamp"].cpu().numpy(),
-            "agent_ids": batch["track_id"].cpu().numpy()
+            "agent_ids": batch["track_id"].cpu().numpy(),
+            "confidences": outputs[1].cpu().numpy(),
         }
 
     def test_epoch_end(self, outputs):
@@ -59,7 +56,9 @@ class LyftModule(LightningModule):
             track_ids=np.concatenate(
                 [output["agent_ids"] for output in outputs]),
             coords=np.concatenate(
-                [output["future_coords_offsets_pd"] for output in outputs])
+                [output["future_coords_offsets_pd"] for output in outputs]),
+            confs=np.concatenate(
+                [output["confidences"] for output in outputs])
         )
         return {}
 
