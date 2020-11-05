@@ -67,7 +67,7 @@ class LyftModule(LightningModule):
         return {
             "optimizer": self.optimizer,
             "scheduler": self.scheduler,
-            "monitor": "val_eval_metric"
+            "monitor": "val_loss"
         }
 
     def compute_loss(self, batch, outputs):
@@ -83,7 +83,7 @@ class LyftModule(LightningModule):
     def compute_metric(self, batch, outputs):
         target_availabilities = batch["target_availabilities"].unsqueeze(-1)
         targets = batch["target_positions"]
-        return torch.tensor(0)
+        return torch.tensor(0.0)
         #outputs = outputs.reshape(targets.shape)
         #eval_metric = 0
         #for target, output, avail in zip(targets, outputs, target_availabilities):
