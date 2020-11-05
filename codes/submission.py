@@ -28,7 +28,7 @@ from torchvision.models.resnet import resnet34, resnet50
 from tqdm.notebook import tqdm
 
 mode = "test"
-gpu = 0
+gpu = "0"
 num_workers = cpu_count()
 history_num_frames = 10
 future_num_frames=50
