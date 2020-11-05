@@ -63,6 +63,8 @@ class LyftModule(LightningModule):
         return {}
 
     def configure_optimizers(self):
+        if self.optimizer is None:
+            return None
         return {
             "optimizer": self.optimizer,
             "scheduler": self.scheduler,
