@@ -27,15 +27,24 @@ from torch.utils.data import DataLoader
 from torchvision.models.resnet import resnet34, resnet50
 from tqdm.notebook import tqdm
 
+mode = "test"
+gpu = 0
+num_workers = cpu_count()
+history_num_frames = 10
+future_num_frames=50
+batch_size=4
+distributed_backend=None
+pretrained_path=None
 
-def get_test_cfg(args):
+
+def get_test_cfg():
     return {
         "format_version": 4,
         "model_params": {
-            "history_num_frames": args.history_num_frames,
+            "history_num_frames": history_num_frames,
             "history_step_size": 1,
             "history_delta_time": 0.1,
-            "future_num_frames": args.future_num_frames,
+            "future_num_frames": future_num_frames,
             "future_step_size": 1,
             "future_delta_time": 0.1
         },
@@ -56,10 +65,9 @@ def get_test_cfg(args):
 
 
 class LyftLDM(LightningDataModule):
-    def __init__(self, args, data_root):
+    def __init__(self, data_root):
         super().__init__()
-        self.args = args
-        self.cfg = get_test_cfg(args)
+        self.cfg = get_test_cfg()
         self.data_root = data_root
         self.dm = LocalDataManager(data_root)
         self.rast = build_rasterizer(self.cfg, self.dm)
@@ -88,8 +96,8 @@ class LyftLDM(LightningDataModule):
         return DataLoader(
             agent_dataset,
             shuffle=shuffle,
-            batch_size=self.args.batch_size,
-            num_workers=self.args.num_workers,
+            batch_size=batch_size,
+            num_workers=num_workers,
         )
 
 
@@ -100,7 +108,7 @@ class LyftNet(LightningModule):
         future_num_frames,
         pretrained=True,
         num_modes=3,
-        **kwargs
+        **kw
     ):
         super().__init__()
         num_history_channels = (history_num_frames+1) * 2
@@ -184,61 +192,14 @@ class LyftModule(LightningModule):
         return None
 
 
-def set_device(args):
-    if args.cpu:
-        if args.gpu is not None:
-            raise ArgumentError("Can't use CPU and GPU at the same time")
-    elif args.gpu is None:
-        args.gpu = 0
-
-
-def base_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--mode", type=str, choices=["train", "test"], default="train")
-    parser.add_argument(
-        "--gpu", type=str)
-    parser.add_argument(
-        "--cpu", action="store_true")
-    parser.add_argument(
-        "--num_workers", "--jobs", "-j",
-        type=int, choices=range(cpu_count()+1), default=cpu_count())
-    parser.add_argument("--Wall", action="store_true")
-    args, _ = parser.parse_known_args()
-    set_device(args)
-    return args, parser
-
-
-def test_args(parent_parser):
-    parser = argparse.ArgumentParser(
-        parents=[parent_parser], add_help=False)
-    # Model options
-    parser.add_argument(
-        "--history_num_frames", "-hnf", type=int, default=10)
-    parser.add_argument(
-        "--future_num_frames", "-fnf", type=int, default=50)
-
-    # Train options 
-    parser.add_argument(
-        "--batch_size", "-bs", type=int, default=4)
-    parser.add_argument(
-        "--distributed_backend", "-db", default=None)
-    parser.add_argument(
-        "--pretrained_path", "-pp", type=str)
-    args = parser.parse_args()
-    return args
-
-
 if __name__ == "__main__":
     os.environ["L5KIT_DATA_FOLDER"] = os.path.realpath(
         "../input/lyft-motion-prediction-autonomous-vehicles")
-    args, parser = base_args()
-    args = test_args(parser)
     trainer = Trainer(
-        gpus=args.gpu,
-        resume_from_checkpoint=args.pretrained_path,
-        distributed_backend=args.distributed_backend,
+        gpus=gpu,
+        resume_from_checkpoint=pretrained_path,
+        distributed_backend=distributed_backend,
     )
     trainer.test(
-        LyftModule(LyftNet(args.history_num_frames, args.future_num_frames)),
-        datamodule=LyftLDM(args, os.environ["L5KIT_DATA_FOLDER"]))
+        LyftModule(LyftNet(history_num_frames, future_num_frames)),
+        datamodule=LyftLDM(os.environ["L5KIT_DATA_FOLDER"]))
