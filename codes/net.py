@@ -2,7 +2,7 @@ from pytorch_lightning import LightningModule
 import torch
 from torchvision.models.resnet import resnet50, resnet34
 import torch.nn as nn
-
+from convlstm.convlstm import ConvLSTM
 
 class LyftNet(LightningModule):
     def __init__(
@@ -19,6 +19,10 @@ class LyftNet(LightningModule):
         num_targets = 2 * future_num_frames
         self.future_len = future_num_frames
 
+        self.ConvLSTM = ConvLSTM(
+            2, [
+                2,2,2,2,2,2,2,2,2,2,2
+            ], (3,3), 11)
         self.backbone = resnet34(pretrained=pretrained)
         #for name, param in resnet.named_parameters():
         #    if param.requires_grad:
@@ -41,6 +45,13 @@ class LyftNet(LightningModule):
         self.logit = nn.Linear(4096, out_features=self.num_preds + num_modes)
 
     def forward(self, x):
+        # print(x.shape)
+        x[:,:22,...] = torch.stack(self.ConvLSTM(
+            torch.stack([
+                torch.stack((x[:,i,...], x[:,i+11,...]), dim=1)
+                for i in range(11)
+            ]))[0], 
+        dim=1).squeeze(1).view(4, 22, 224, 224)
         x = self.backbone.conv1(x)
         x = self.backbone.bn1(x)
         x = self.backbone.relu(x)

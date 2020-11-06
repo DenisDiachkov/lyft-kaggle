@@ -64,6 +64,7 @@ def train(args, parser):
     tb_logger = tb(".", "experiments", version=args.experiment_name)
     checkpoint_callback = ModelCheckpoint(monitor="val_loss")
     trainer = Trainer(
+        weights_summary='full',
         gpus=args.gpu,
         checkpoint_callback=checkpoint_callback,
         logger=tb_logger,

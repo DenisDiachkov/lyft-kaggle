@@ -72,8 +72,8 @@ class LyftModule(LightningModule):
         }
 
     def compute_loss(self, batch, outputs):
-        target_availabilities = batch["target_availabilities"].cuda()
-        targets = batch["target_positions"].cuda()
+        target_availabilities = batch["target_availabilities"] # .cuda()
+        targets = batch["target_positions"] # .cuda()
         preds, confidences = outputs
         #outputs = outputs.reshape(targets.shape)
         loss = self.criterion(targets, preds, confidences, target_availabilities)
