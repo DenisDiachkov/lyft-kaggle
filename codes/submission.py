@@ -1,3 +1,4 @@
+##!pip install pytorch-lightning==0.9.0
 import argparse
 import os
 import warnings
@@ -28,13 +29,19 @@ from torchvision.models.resnet import resnet34, resnet50
 from tqdm.notebook import tqdm
 
 mode = "test"
-gpu = 0
+gpu = "0"
 num_workers = cpu_count()
 history_num_frames = 10
 future_num_frames=50
 batch_size=4
 distributed_backend=None
-pretrained_path=None
+pretrained_path="experiments/better_model_2/checkpoints/epoch_166.ckpt"
+
+
+print("Pytorch lightning version:", pl.__version__)
+if pl.__version__ != "0.9.0":
+    import sys
+    sys.exit(1)
 
 
 def get_test_cfg():
@@ -200,6 +207,7 @@ if __name__ == "__main__":
         resume_from_checkpoint=pretrained_path,
         distributed_backend=distributed_backend,
     )
+    print("Start testing...")
     trainer.test(
         LyftModule(LyftNet(history_num_frames, future_num_frames)),
         datamodule=LyftLDM(os.environ["L5KIT_DATA_FOLDER"]))
