@@ -51,7 +51,7 @@ class LyftNet(LightningModule):
                 torch.stack((x[:,i,...], x[:,i+11,...]), dim=1)
                 for i in range(11)
             ]))[0], 
-        dim=1).squeeze(1).view(4, 22, 224, 224)
+        dim=1).squeeze(1).view(-1, 22, 224, 224)
         x = self.backbone.conv1(x)
         x = self.backbone.bn1(x)
         x = self.backbone.relu(x)

@@ -50,9 +50,9 @@ class ConvLSTMCell(nn.Module):
         
         return h_next, c_next
 
-    def init_hidden(self, b, h, w):
-        return (torch.zeros(b, self.hidden_dim, h, w),
-                torch.zeros(b, self.hidden_dim, h, w))
+    def init_hidden(self, b, h, w, device):
+        return (torch.zeros(b, self.hidden_dim, h, w).to(device),
+                torch.zeros(b, self.hidden_dim, h, w).to(device))
 
 
 class ConvLSTM(nn.Module):
@@ -111,7 +111,8 @@ class ConvLSTM(nn.Module):
             raise NotImplementedError()
         else:
             b, _, _, h, w = input_tensor.shape
-            hidden_state = self._init_hidden(b, h, w)
+            device = input_tensor.device
+            hidden_state = self._init_hidden(b, h, w, device)
 
         layer_output_list = []
         last_state_list   = []
@@ -141,10 +142,10 @@ class ConvLSTM(nn.Module):
 
         return layer_output_list, last_state_list
 
-    def _init_hidden(self, b, h, w):
+    def _init_hidden(self, b, h, w, device="cpu"):
         init_states = []
         for i in range(self.num_layers):
-            init_states.append(self.cell_list[i].init_hidden(b, h, w))
+            init_states.append(self.cell_list[i].init_hidden(b, h, w, device))
         return init_states
 
     @staticmethod
@@ -203,8 +204,3 @@ if __name__ == "__main__":
     out = cblstm(x_fwd, x_rev)
     print (out.shape)
     out.sum().backward()
-
-
-
-
-
