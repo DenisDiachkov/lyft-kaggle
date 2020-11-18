@@ -19,23 +19,28 @@ class LyftNet(LightningModule):
         num_targets = 2 * future_num_frames
         self.future_len = future_num_frames
 
-        self.ConvLSTM = ConvLSTM(
-            2, [
-                2,2,2,2,2,2,2,2,2,2,2
-            ], (3,3), 11)
-        self.backbone = resnet34(pretrained=pretrained)
+        # self.ConvLSTM = ConvLSTM(
+        #     2, [
+        #         2,2,2,2,2,2,2,2,2,2,2
+        #     ], (3,3), 11)
+        self.backbone = nn.SyncBatchNorm.convert_sync_batchnorm(
+            torch.hub.load(
+                'zhanghang1989/ResNeSt', 'resnest50', pretrained=True
+            )
+            # resnet34(pretrained=pretrained)
+        )
         #for name, param in resnet.named_parameters():
         #    if param.requires_grad:
         #        print(name + " " * (30 - len(name)) + str(param.shape))
-        self.backbone.conv1 = nn.Conv2d(
+        self.backbone.conv1[0] = nn.Conv2d(
             num_in_channels,
-            self.backbone.conv1.out_channels,
-            kernel_size=self.backbone.conv1.kernel_size,
-            stride=self.backbone.conv1.stride,
-            padding=self.backbone.conv1.padding,
+            self.backbone.conv1[0].out_channels,
+            kernel_size=self.backbone.conv1[0].kernel_size,
+            stride=self.backbone.conv1[0].stride,
+            padding=self.backbone.conv1[0].padding,
             bias=False,
         )
-        backbone_out_features = 512
+        backbone_out_features = 2048
         self.head = nn.Sequential(
             # nn.Dropout(0.2),
             nn.Linear(in_features=backbone_out_features, out_features=4096),
@@ -46,12 +51,12 @@ class LyftNet(LightningModule):
 
     def forward(self, x):
         # print(x.shape)
-        x[:,:22,...] = torch.stack(self.ConvLSTM(
-            torch.stack([
-                torch.stack((x[:,i,...], x[:,i+11,...]), dim=1)
-                for i in range(11)
-            ]))[0], 
-        dim=1).squeeze(1).view(-1, 22, 224, 224)
+        # x[:,:22,...] = torch.stack(self.ConvLSTM(
+        #     torch.stack([
+        #         torch.stack((x[:,i,...], x[:,i+11,...]), dim=1)
+        #         for i in range(11)
+        #     ]))[0], 
+        # dim=1).squeeze(1).view(-1, 22, 224, 224)
         x = self.backbone.conv1(x)
         x = self.backbone.bn1(x)
         x = self.backbone.relu(x)

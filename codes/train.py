@@ -33,7 +33,7 @@ def train_args(parent_parser):
     parser.add_argument(
         "--batch_size", "-bs", type=int, default=4)
     parser.add_argument(
-        "--distributed_backend", "-db", type=str, default="dp")
+        "--distributed_backend", "-db", type=str, default="ddp")
     parser.add_argument(
         "--epochs", type=int, default=4)
     parser.add_argument(

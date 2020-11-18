@@ -20,25 +20,15 @@ class LyftModule(LightningModule):
 
     def training_step(self, batch, batch_idx):
         outputs = self(batch["image"])
-
-        loss = self.compute_loss(batch, outputs)
-        eval_metric = self.compute_metric(batch, outputs)
-
-        result = pl.TrainResult(loss)
-        result.log("train_loss", loss, on_epoch=True, prog_bar=True)
-        result.log("train_eval_metric", eval_metric, prog_bar=True)
-        return result
+        return {
+            "loss": self.compute_loss(batch, outputs)
+        }
 
     def validation_step(self, batch, batch_idx):
         outputs = self(batch["image"])
-
-        loss = self.compute_loss(batch, outputs)
-        eval_metric = self.compute_metric(batch, outputs)
-        
-        result = pl.EvalResult(checkpoint_on=loss)
-        result.log("val_loss", loss, prog_bar=True)
-        result.log("val_eval_metric", eval_metric, prog_bar=True)
-        return result
+        return {
+            "val_loss": self.compute_loss(batch, outputs)
+        }
 
     def test_step(self, batch, batch_idx):
         outputs = self(batch["image"])
@@ -72,26 +62,10 @@ class LyftModule(LightningModule):
         }
 
     def compute_loss(self, batch, outputs):
-        target_availabilities = batch["target_availabilities"] # .cuda()
-        targets = batch["target_positions"] # .cuda()
-        preds, confidences = outputs
-        #outputs = outputs.reshape(targets.shape)
-        loss = self.criterion(targets, preds, confidences, target_availabilities)
-        #loss = self.criterion(outputs, targets)
-        #loss = (loss * target_availabilities).mean()
-        return loss
-
-    def compute_metric(self, batch, outputs):
-        target_availabilities = batch["target_availabilities"].unsqueeze(-1)
+        target_availabilities = batch["target_availabilities"]
         targets = batch["target_positions"]
-        return torch.tensor(0.0)
-        #outputs = outputs.reshape(targets.shape)
-        #eval_metric = 0
-        #for target, output, avail in zip(targets, outputs, target_availabilities):
-        #    eval_metric += neg_multi_log_likelihood(
-        #        target.cpu().numpy(),
-        #        output.unsqueeze(0).detach().cpu().numpy(), 
-        #        np.ones(1),
-        #        avail.squeeze(1).cpu().numpy()
-        #    )
-        #return torch.tensor(eval_metric)
+        preds, confidences = outputs
+        loss = self.criterion(
+            targets, preds, confidences, target_availabilities
+        )
+        return loss
