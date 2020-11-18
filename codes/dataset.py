@@ -43,7 +43,7 @@ class LyftLDM(LightningDataModule):
     def val_dataloader(self):
         return self.get_dataloader(
             "scenes/validate.zarr",
-            self.args.shuffle
+            False
         )
 
     def test_dataloader(self):
