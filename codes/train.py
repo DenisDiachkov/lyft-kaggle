@@ -12,7 +12,8 @@ from pytorch_lightning.loggers import TensorBoardLogger as tb
 from module import LyftModule
 from net import LyftNet
 from dataset import LyftLDM
-from utils import pytorch_neg_multi_log_likelihood_batch
+from over9000.rangerlars import RangerLars
+from CosineAnnealingLRScheduler.cosine_annearing_with_warmup import CosineAnnealingWarmUpRestarts
 
 
 def train_args(parent_parser):
@@ -33,7 +34,7 @@ def train_args(parent_parser):
     parser.add_argument(
         "--batch_size", "-bs", type=int, default=4)
     parser.add_argument(
-        "--distributed_backend", "-db", type=str, default="ddp")
+        "--distributed_backend", "-db", type=str, default="dp")
     parser.add_argument(
         "--epochs", type=int, default=4)
     parser.add_argument(
@@ -53,9 +54,10 @@ def train_args(parent_parser):
 
 def get_module(args):
     model = LyftNet(args.history_num_frames, args.future_num_frames)
-    optimizer = optim.Adam(model.parameters(), lr=1e-4)
-    scheduler = sched.ReduceLROnPlateau(optimizer, "min", 0.3, 5, min_lr=1e-8)
-    criterion = pytorch_neg_multi_log_likelihood_batch
+    optimizer = RangerLars(model.parameters())  # optim.Adam(model.parameters(), lr=1e-3)
+    scheduler = CosineAnnealingWarmUpRestarts(
+        optimizer, T_0=15, T_mult=1, eta_max=0.1, T_up=2, gamma=0.5)  # sched.ReduceLROnPlateau(optimizer, "min", 0.3, 5, min_lr=1e-8)
+    criterion = nn.MSELoss()
     return LyftModule(model, optimizer, scheduler, criterion)
 
 
@@ -64,7 +66,6 @@ def train(args, parser):
     tb_logger = tb(".", "experiments", version=args.experiment_name)
     checkpoint_callback = ModelCheckpoint(monitor="val_loss")
     trainer = Trainer(
-        weights_summary='full',
         gpus=args.gpu,
         checkpoint_callback=checkpoint_callback,
         logger=tb_logger,
