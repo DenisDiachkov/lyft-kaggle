@@ -12,6 +12,8 @@ from pytorch_lightning.loggers import TensorBoardLogger as tb
 from module import LyftModule
 from net import LyftNet
 from dataset import LyftLDM
+from over9000.rangerlars import RangerLars
+from CosineAnnealingLRScheduler.cosine_annearing_with_warmup import CosineAnnealingWarmUpRestarts
 
 
 def train_args(parent_parser):
@@ -52,8 +54,9 @@ def train_args(parent_parser):
 
 def get_module(args):
     model = LyftNet(args.history_num_frames, args.future_num_frames)
-    optimizer = optim.Adam(model.parameters(), lr=1e-3)
-    scheduler = sched.ReduceLROnPlateau(optimizer, "min", 0.3, 5, min_lr=1e-8)
+    optimizer = RangerLars(model.parameters())  # optim.Adam(model.parameters(), lr=1e-3)
+    scheduler = CosineAnnealingWarmUpRestarts(
+        optimizer, T_0=15, T_mult=1, eta_max=0.1, T_up=2, gamma=0.5)  # sched.ReduceLROnPlateau(optimizer, "min", 0.3, 5, min_lr=1e-8)
     criterion = nn.MSELoss()
     return LyftModule(model, optimizer, scheduler, criterion)
 
